@@ -1,0 +1,53 @@
+from Crypto.Cipher import AES, DES
+from Crypto.PublicKey import RSA
+from binascii import unhexlify, Error
+
+def sanitize_hex(hex_ciphertext):
+    """Sanitize the hexadecimal string by removing invalid characters and ensuring even length."""
+    sanitized = ''.join(c for c in hex_ciphertext if c in '0123456789abcdefABCDEF')
+    if len(sanitized) % 2 != 0:
+        sanitized = '0' + sanitized
+    return sanitized
+
+def detect_encryption_algorithm(hex_ciphertext):
+    hex_ciphertext = sanitize_hex(hex_ciphertext)
+
+    try:
+        ciphertext = unhexlify(hex_ciphertext)
+    except Error as e:
+        return f"Hexadecimal decoding error: {e}"
+
+    # Check for AES
+    try:
+        if len(ciphertext) in [16, 24, 32]:
+            cipher = AES.new(get_random_bytes(16), AES.MODE_ECB)
+            cipher.decrypt(ciphertext[:16])
+            return "AES"
+    except Exception:
+        pass
+
+    # Check for DES
+    try:
+        if len(ciphertext) % 8 == 0:
+            cipher = DES.new(get_random_bytes(8), DES.MODE_ECB)
+            cipher.decrypt(ciphertext[:8])
+            return "DES"
+    except Exception:
+        pass
+    
+    # Check for RSA
+    try:
+        if len(ciphertext) >= 128:  # Assuming a small key size like 1024 bits
+            key = RSA.generate(2048)
+            cipher = PKCS1_OAEP.new(key.publickey())
+            cipher.decrypt(ciphertext)
+            return "RSA"
+    except Exception:
+        pass
+    
+    return "Unknown"
+
+# Example usage
+hex_ciphertext = "163f36fe275d1c1da8057310156bfd2dd102c02395587b883922b0bde93dd31f055917d184419a5bc4c18e1d4d5245d79ea0dd9f134a6a04e6f0923d8a94aecf17661bc076613af39f06f9055528079470ac6451ccf8f3dd8cf605b17b70f3a82568bfcf8ed28e32ed461cf090770b3ad4049fd1da9328b07d044d9dd659b6e8c782d3bad7eae5900236ae4232c118ec9bdb22ce552c1d0100aab404b25c81a088333f01e74337760372f9153ccabcc7bfa99b4ce5bf616a56af4917f4a4952c51f3f8ef1e249310974ae11696bc26be87fe3d720d134a2fba52a3fc9d164bd9d533586766ea971b3d719d6be8149fe3ca99ce058d23505d20e4425c12f7d55c"  # Replace with the hex ciphertext you want to test
+algorithm = detect_encryption_algorithm(hex_ciphertext)
+print(f"The encryption algorithm is: {algorithm}")
