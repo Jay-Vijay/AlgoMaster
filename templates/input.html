@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="slide-in">
+    <h2>Input Your Data</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <textarea name="input_text" placeholder="Enter your cipher text here"></textarea><br>
+        <p>Or upload a CSV or TXT file:</p>
+        <input type="file" name="input_file" accept=".csv,.txt"><br><br>
+        <button type="submit">Next</button>
+    </form>
+</div>
+{% endblock %}

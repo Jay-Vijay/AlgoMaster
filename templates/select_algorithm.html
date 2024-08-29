@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="slide-in">
+    <h2>Select Algorithm</h2>
+    <form method="POST">
+        <input type="radio" name="algorithm" value="free_algorithm" checked> Free Algorithm<br>
+        <input type="radio" name="algorithm" value="premium_algorithm"> Premium Algorithm<br><br>
+        <button type="submit">Predict</button>
+    </form>
+</div>
+{% endblock %}
