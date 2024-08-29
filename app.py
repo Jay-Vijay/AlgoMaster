@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from config import ALGORITHMS, SUBSCRIPTION_REQUIRED
 
 app = Flask(__name__)
-app.secret_key = 'Kamaljashan@2619'  # Necessary for session management
+app.secret_key = 'your_secret_key'  # Necessary for session management
+
+# Example list of algorithms with names and descriptions
+algorithms = [
+    {'name': 'free_algorithm_1', 'description': 'Free Algorithm 1'},
+    {'name': 'premium_algorithm', 'description': 'Premium Algorithm'}
+]
 
 # Home route
 @app.route('/')
@@ -29,13 +34,12 @@ def input_data():
 def select_algorithm(data):
     if request.method == 'POST':
         algorithm = request.form.get('algorithm')
-        if algorithm in SUBSCRIPTION_REQUIRED and SUBSCRIPTION_REQUIRED[algorithm]:
+        if algorithm == 'premium_algorithm':
             return redirect(url_for('subscription'))
         else:
-            # Placeholder for actual algorithm prediction logic
-            prediction = f"Predicted using {algorithm}"  
-            return render_template('result.html', prediction=prediction)
-    return render_template('select_algorithm.html', data=data, algorithms=ALGORITHMS)
+            prediction = f"Predicted using {algorithm}"  # Placeholder prediction
+            return redirect(url_for('result', prediction=prediction))
+    return render_template('select_algorithm.html', data=data, algorithms=algorithms)
 
 # Subscription route
 @app.route('/subscription')
