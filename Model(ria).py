@@ -8,7 +8,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
-from Crypto.Cipher import AES, DES
+from Crypto.Cipher import AES, DES, DES3
 
 # Generate random plaintext
 def generate_random_plaintext(min_length=10, max_length=100):
@@ -25,6 +25,13 @@ def encrypt_aes(key, iv, plaintext):
 
 def encrypt_des(key, iv, plaintext):
     cipher = DES.new(key, DES.MODE_CBC, iv)
+    pad_len = 8 - len(plaintext) % 8
+    padded_plaintext = plaintext + chr(pad_len) * pad_len
+    ciphertext = cipher.encrypt(padded_plaintext.encode('utf-8'))
+    return ciphertext
+
+def encrypt_3des(key, iv, plaintext):
+    cipher = DES3.new(key, DES3.MODE_CBC, iv)
     pad_len = 8 - len(plaintext) % 8
     padded_plaintext = plaintext + chr(pad_len) * pad_len
     ciphertext = cipher.encrypt(padded_plaintext.encode('utf-8'))
@@ -52,6 +59,15 @@ for _ in range(num_samples):
     data.append({
         'ciphertext': des_ciphertext.hex(),
         'algorithm': 'DES'
+    })
+    
+    # 3DES encryption
+    des3_key = DES3.adjust_key_parity(os.urandom(16))
+    des3_iv = os.urandom(8)
+    des3_ciphertext = encrypt_3des(des3_key, des3_iv, plaintext)
+    data.append({
+        'ciphertext': des3_ciphertext.hex(),
+        'algorithm': '3DES'
     })
 
 # Convert to DataFrame
@@ -82,9 +98,10 @@ y_pred = gbm.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 # Hyperparameter tuning
-param_grid = {'n_estimators': [100, 200], 'learning_rate': [0.01, 0.1, 0.5], 'max_depth': [3, 5, 7]}
+param_grid = {'n_estimators': [100, 200], 'learning_rate': [0.0001, 0.001, 0.05], 'max_depth': [3, 5, 7]}
 grid_search = GridSearchCV(gbm, param_grid, cv=3)
 grid_search.fit(X_train, y_train)
 y_pred = grid_search.predict(X_test)
 print(f"Best Parameters: {grid_search.best_params_}")
 print(classification_report(y_test, y_pred))
+
