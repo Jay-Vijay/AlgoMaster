@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import chisquare, entropy
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, VotingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
@@ -48,13 +48,25 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Train AdaBoost model
-base_estimator = DecisionTreeClassifier(max_depth=3)
-adaboost = AdaBoostClassifier(estimator=base_estimator, n_estimators=100, learning_rate=0.1, random_state=42)
-adaboost.fit(X_train, y_train)
+# Increase model complexity by using a deeper Decision Tree
+base_estimator = DecisionTreeClassifier(max_depth=6)
+
+# Train AdaBoost model with grid search for hyperparameter tuning
+param_grid = {
+    'n_estimators': [100, 200],
+    'learning_rate': [0.01, 0.1, 0.5],
+    'estimator__max_depth': [3, 5, 6]
+}
+
+adaboost = AdaBoostClassifier(estimator=base_estimator, random_state=42)
+grid_search = GridSearchCV(adaboost, param_grid, cv=3, n_jobs=-1, verbose=2)
+grid_search.fit(X_train, y_train)
+
+# Best model
+best_adaboost = grid_search.best_estimator_
 
 # Predict on the test set
-y_pred = adaboost.predict(X_test)
+y_pred = best_adaboost.predict(X_test)
 
 # Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
@@ -62,9 +74,9 @@ print(f"Test Accuracy: {accuracy:.4f}")
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=label_encoder.classes_))
 
-# Predict on new data
+# Optional: Predict on new data
 # new_encrypted_message = "your_hex_encrypted_message_here"
 # new_features = np.array(extract_features(new_encrypted_message)).reshape(1, -1)
 # new_features = scaler.transform(new_features)
-# predicted_algorithm = label_encoder.inverse_transform(adaboost.predict(new_features))
+# predicted_algorithm = label_encoder.inverse_transform(best_adaboost.predict(new_features))
 # print(f"The encrypted message uses: {predicted_algorithm[0]}")
